@@ -1,2 +1,1 @@
-# AhmQuad
-AI &amp; Bluetooth enabled, Collision Avoiding Smart Quadcopter
+BLE app and sensor data dashboard for the AhmQuadcopter
