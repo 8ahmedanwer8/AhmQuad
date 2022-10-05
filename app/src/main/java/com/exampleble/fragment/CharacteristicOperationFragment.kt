@@ -3,9 +3,8 @@ package com.desarollobluetooth.fragments
 import android.os.Bundle
 import android.text.TextUtils
 import android.text.method.ScrollingMovementMethod
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.util.Log
+import android.view.*
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -20,6 +19,8 @@ import com.clj.fastble.exception.BleException
 import com.clj.fastble.utils.HexUtil
 import com.exampleble.MainActivity
 import com.exampleble.R
+import kotlinx.android.synthetic.main.fragment_dashboard.*
+import java.lang.NumberFormatException
 import java.util.ArrayList
 
 class CharacteristicOperationFragment: Fragment() {
@@ -42,7 +43,19 @@ class CharacteristicOperationFragment: Fragment() {
     ): View? {
         val v = inflater.inflate(R.layout.fragment_characteric_operation, null)
         initView(v)
+        setHasOptionsMenu(true)
         return v
+    }
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId == R.id.dashboardBtn){
+            (getActivity() as MainActivity).updateFragment(4)
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun initView(v: View) {
@@ -226,6 +239,12 @@ class CharacteristicOperationFragment: Fragment() {
                                                     true
                                                 )
                                             )
+                                            LogText(
+                                                txt,
+                                                HexUtil.formatHexString(
+                                                characteristic.getValue(),
+                                                true
+                                            ))
                                         })
                                     }
                                 })
@@ -310,5 +329,90 @@ class CharacteristicOperationFragment: Fragment() {
             textView.scrollTo(0, offset - textView.height)
         }
     }
+
+    fun IntRange.convert(number: Int, target: IntRange): Int {//positive ranges
+        val ratio = number.toFloat() / (endInclusive - start)
+        return (ratio * (target.endInclusive - target.start)).toInt()
+    }
+    fun IntRange.convertGyro(number: Int, target: IntRange): Int {
+        val ratio = number.toFloat() / (endInclusive - start)
+        return (ratio * (500)- 250).toInt()
+    }
+
+
+    private fun LogText(textView: TextView, content: String){
+        textView.append(content)
+        textView.append("\n")
+        val offset = textView.lineCount * textView.lineHeight
+        if (offset > textView.height) {
+            textView.scrollTo(0, offset - textView.height)
+        }
+        var messages = mutableListOf<String>()
+        val contentArray: MutableList<String> = content.split(" ") as MutableList<String>
+        var sonarArray = mutableListOf<String>()
+        var flightModeArray = mutableListOf<String>()
+        var gyroArray = mutableListOf<String>()
+        if (contentArray.size > 3){
+            sonarArray.add(contentArray[0])
+            sonarArray.add(contentArray[1])
+            sonarArray.add(contentArray[2])
+
+            flightModeArray.add(contentArray[3])
+
+            gyroArray.add(contentArray[4])
+            gyroArray.add(contentArray[5])
+            gyroArray.add(contentArray[6])
+
+            sonarArray.forEach {
+                var value = java.lang.Long.parseLong("$it", 16).toInt()
+                value = (0..255).convert(value, 0..800)
+                messages.add(value.toString())
+            }
+            flightModeArray.forEach {
+                var value = java.lang.Long.parseLong("$it", 16).toInt()
+                messages.add(value.toString())
+            }
+
+            gyroArray.forEach {
+                var value = java.lang.Long.parseLong("$it", 16).toInt()
+                Log.i("fdapf", "$value")
+                value = (0..255).convertGyro(value, -250..250)
+                messages.add(value.toString())
+            }
+
+            Log.i("incoming", "$messages")
+
+
+            activity!!.supportFragmentManager.fragments[4].distanceS1Tv.text = messages[0].toString()
+            activity!!.supportFragmentManager.fragments[4].distanceS2Tv.text = messages[1].toString()
+            activity!!.supportFragmentManager.fragments[4].distanceS3Tv.text = messages[2].toString()
+            activity!!.supportFragmentManager.fragments[4].gyroXTv.text = messages[4].toString()
+            activity!!.supportFragmentManager.fragments[4].gyroYTv.text = messages[5].toString()
+            activity!!.supportFragmentManager.fragments[4].gyroZTv.text = messages[6].toString()
+
+            when (messages[3].toInt()){
+                0 -> {
+                    activity!!.supportFragmentManager.fragments[4].mode1.alpha = 1F
+                    activity!!.supportFragmentManager.fragments[4].mode2.alpha = 0.3F
+                    activity!!.supportFragmentManager.fragments[4].mode3.alpha = 0.3F
+                }
+                1 -> {
+                    activity!!.supportFragmentManager.fragments[4].mode1.alpha = 0.3F
+                    activity!!.supportFragmentManager.fragments[4].mode2.alpha = 1F
+                    activity!!.supportFragmentManager.fragments[4].mode3.alpha = 0.3F
+                }
+                2 -> {
+                    activity!!.supportFragmentManager.fragments[4].mode1.alpha = 0.3F
+                    activity!!.supportFragmentManager.fragments[4].mode2.alpha = 0.3F
+                    activity!!.supportFragmentManager.fragments[4].mode3.alpha = 1F
+                }
+
+            }
+        }
+
+    }
+
+
+
 
 }

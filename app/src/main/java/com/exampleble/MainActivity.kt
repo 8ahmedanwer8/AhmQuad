@@ -14,6 +14,7 @@ import com.clj.fastble.data.BleDevice
 import com.desarollobluetooth.fragments.CharacteristicOperationFragment
 import com.desarollobluetooth.fragments.MainFragment
 import com.exampleble.fragment.CharacteristicListFragment
+import com.exampleble.fragment.Dashboard
 import com.exampleble.fragment.ServiceListFragment
 import com.exampleble.observers.Observer
 import com.exampleble.observers.ObserverManager
@@ -70,6 +71,7 @@ class MainActivity : AppCompatActivity(), MainFragment.OnFragmentInteractionList
         fragments.add(ServiceListFragment())
         fragments.add(CharacteristicListFragment())
         fragments.add(CharacteristicOperationFragment())
+        fragments.add(Dashboard())
 
             for (fragment in fragments) {
                 if ( fragment !is MainFragment) {
@@ -79,7 +81,7 @@ class MainActivity : AppCompatActivity(), MainFragment.OnFragmentInteractionList
     }
 
 
-    private fun updateFragment(position: Int) {
+    fun updateFragment(position: Int) {
         if (position > fragments.size - 1) {
             return
         }
@@ -117,6 +119,7 @@ class MainActivity : AppCompatActivity(), MainFragment.OnFragmentInteractionList
         toolbar = findViewById(R.id.toolbar)
         toolbar!!.title = titles[0]
         setSupportActionBar(toolbar)
+
         fragments.add(MainFragment.newInstance("",""))
 
         initPage()
